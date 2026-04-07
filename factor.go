@@ -83,6 +83,9 @@ func (f *Factor) Marginalize(variable string) *Factor {
 // Cela permet de savoir de combien on "saute" dans le slice pour changer l'état d'une variable.
 func (f *Factor) GetStrides() map[string]int {
 	strides := make(map[string]int)
+	if len(f.Variables) == 0 {
+        return strides
+    }
 	currentStride := 1
 	// On parcourt à l'envers pour respecter l'ordre de stockage classique
 	for i := len(f.Variables) - 1; i >= 0; i-- {
@@ -96,6 +99,9 @@ func (f *Factor) GetStrides() map[string]int {
 // IndexToStates convertit un index de slice plat en une map d'états (0, 1, 2...)
 func (f *Factor) IndexToStates(index int, strides map[string]int) map[string]int {
 	states := make(map[string]int)
+	if len(f.Variables) == 0 {
+        return states // Retourne une map vide pour un facteur scalaire
+    }
 	for _, v := range f.Variables {
 		stride := strides[v]
 		states[v] = (index / stride) % f.Dims[v]
