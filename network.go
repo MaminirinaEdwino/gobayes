@@ -1,0 +1,60 @@
+package gobayes
+
+import (
+	"errors"
+	"fmt"
+)
+
+func NewNetwork() *Network {
+	return &Network{Nodes: make(map[string]*Node)}
+}
+
+// AddNode crée et ajoute un nœud au réseau
+func (n *Network) AddNode(name string, states []string) (*Node, error) {
+	if _, exists := n.Nodes[name]; exists {
+		return nil, fmt.Errorf("le nœud %s existe déjà", name)
+	}
+	node := &Node{
+		Name:   name,
+		States: states,
+	}
+	n.Nodes[name] = node
+	return node, nil
+}
+
+// AddEdge crée un lien de causalité entre un parent et un enfant
+func (n *Network) AddEdge(parentName, childName string) error {
+	parent, okP := n.Nodes[parentName]
+	child, okC := n.Nodes[childName]
+	if !okP || !okC {
+		return errors.New("parent ou enfant introuvable")
+	}
+
+	child.Parents = append(child.Parents, parent)
+	parent.Children = append(parent.Children, child)
+
+	// Vérification de cycle (Simple DFS)
+	if n.hasCycle() {
+		// On annule le lien si un cycle est détecté
+		child.Parents = child.Parents[:len(child.Parents)-1]
+		parent.Children = parent.Children[:len(parent.Children)-1]
+		return errors.New("cycle détecté : un réseau bayésien doit être acyclique")
+	}
+	return nil
+}
+
+// SetProbabilities permet de remplir la table CPD. 
+// Les probabilités doivent être fournies dans l'ordre des combinaisons d'états.
+func (node *Node) SetProbabilities(probs []float64) error {
+	expectedSize := len(node.States)
+	for _, p := range node.Parents {
+		expectedSize *= len(p.States)
+	}
+
+	if len(probs) != expectedSize {
+		return fmt.Errorf("taille de CPD incorrecte : attendu %d, reçu %d", expectedSize, len(probs))
+	}
+
+	node.CPD = probs
+	return nil
+}
