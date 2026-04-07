@@ -17,3 +17,9 @@ type Node struct {
 type Network struct {
 	Nodes map[string]*Node
 }
+
+type Factor struct {
+	Variables []string           // Noms des variables (ex: ["Stack", "Performance"])
+	Dims      map[string]int     // Nombre d'états pour chaque variable
+	Values    []float64          // Les probabilités (slice plat)
+}
