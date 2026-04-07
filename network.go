@@ -93,3 +93,27 @@ func (n *Network) isCyclic(name string, visited, recStack map[string]bool) bool 
 	recStack[name] = false // On retire de la pile après exploration
 	return false
 }
+
+// ToFactor convertit les probabilités d'un nœud en un objet Factor calculable
+func (n *Node) ToFactor() *Factor {
+	// 1. Collecter les variables impliquées : le nœud lui-même + ses parents
+	vars := []string{n.Name}
+	dims := make(map[string]int)
+	dims[n.Name] = len(n.States)
+
+	for _, p := range n.Parents {
+		vars = append(vars, p.Name)
+		dims[p.Name] = len(p.States)
+	}
+
+	// 2. Créer le facteur avec une copie des probabilités (CPD)
+	// On copie pour éviter de modifier accidentellement les données d'origine
+	cpdCopy := make([]float64, len(n.CPD))
+	copy(cpdCopy, n.CPD)
+
+	return &Factor{
+		Variables: vars,
+		Dims:      dims,
+		Values:    cpdCopy,
+	}
+}
