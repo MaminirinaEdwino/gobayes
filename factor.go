@@ -143,6 +143,7 @@ func (f *Factor) Reduce(variable string, stateIndex int) *Factor {
 		newDims[v] = f.Dims[v]
 		size *= newDims[v]
 	}
+	if size == 0 { size = 1 }
 
 	result := &Factor{
 		Variables: newVars,
