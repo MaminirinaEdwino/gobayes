@@ -111,3 +111,57 @@ func (f *Factor) StatesToIndex(states map[string]int, strides map[string]int) in
 	}
 	return index
 }
+
+// Reduce crée un nouveau facteur en fixant une variable à un index d'état spécifique.
+// C'est l'opération mathématique pour prendre en compte une "preuve".
+func (f *Factor) Reduce(variable string, stateIndex int) *Factor {
+	// 1. Vérifier si la variable existe dans ce facteur
+	exists := false
+	for _, v := range f.Variables {
+		if v == variable {
+			exists = true
+			break
+		}
+	}
+
+	// Si la variable n'est pas dans ce facteur, on retourne le facteur tel quel
+	if !exists {
+		return f
+	}
+
+	// 2. Définir les nouvelles variables (on retire la variable fixée)
+	newVars := []string{}
+	for _, v := range f.Variables {
+		if v != variable {
+			newVars = append(newVars, v)
+		}
+	}
+
+	newDims := make(map[string]int)
+	size := 1
+	for _, v := range newVars {
+		newDims[v] = f.Dims[v]
+		size *= newDims[v]
+	}
+
+	result := &Factor{
+		Variables: newVars,
+		Dims:      newDims,
+		Values:    make([]float64, size),
+	}
+
+	resStrides := result.GetStrides()
+	fStrides := f.GetStrides()
+
+	// 3. Remplir le nouveau facteur uniquement avec les lignes valides
+	for i := 0; i < size; i++ {
+		states := result.IndexToStates(i, resStrides)
+		// On rajoute la variable fixée pour trouver l'index dans le facteur d'origine
+		states[variable] = stateIndex
+		
+		oldIdx := f.StatesToIndex(states, fStrides)
+		result.Values[i] = f.Values[oldIdx]
+	}
+
+	return result
+}
