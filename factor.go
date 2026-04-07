@@ -165,3 +165,13 @@ func (f *Factor) Reduce(variable string, stateIndex int) *Factor {
 
 	return result
 }
+
+func (f *Factor) Normalize() {
+	sum := 0.0
+	for _, v := range f.Values {
+		sum += v
+	}
+	for i := range f.Values {
+		f.Values[i] /= sum
+	}
+}
