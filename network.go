@@ -58,3 +58,38 @@ func (node *Node) SetProbabilities(probs []float64) error {
 	node.CPD = probs
 	return nil
 }
+
+// hasCycle vérifie si le graphe contient un cycle
+func (n *Network) hasCycle() bool {
+	visited := make(map[string]bool)
+	recStack := make(map[string]bool)
+
+	for name := range n.Nodes {
+		if n.isCyclic(name, visited, recStack) {
+			return true
+		}
+	}
+	return false
+}
+
+func (n *Network) isCyclic(name string, visited, recStack map[string]bool) bool {
+	if recStack[name] {
+		return true // Cycle détecté !
+	}
+	if visited[name] {
+		return false
+	}
+
+	visited[name] = true
+	recStack[name] = true
+
+	// On explore tous les enfants
+	for _, child := range n.Nodes[name].Children {
+		if n.isCyclic(child.Name, visited, recStack) {
+			return true
+		}
+	}
+
+	recStack[name] = false // On retire de la pile après exploration
+	return false
+}
