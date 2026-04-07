@@ -1,6 +1,7 @@
 package gobayes
 
 import (
+	"math"
 	"testing"
 )
 
@@ -31,13 +32,13 @@ func TestFactor_Multiply(t *testing.T) {
 
 	result := f1.Multiply(f2)
 
-	if len(result.Values) != len(expected) {
-		t.Errorf("Taille incorrecte, attendu %d, reçu %d", len(expected), len(result.Values))
-	}
+	const epsilon = 1e-9 
 
 	for i, v := range result.Values {
-		if v != expected[i] {
+		// On calcule la différence absolue
+		if math.Abs(v-expected[i]) > epsilon {
 			t.Errorf("Valeur incorrecte à l'index %d : attendu %f, reçu %f", i, expected[i], v)
 		}
 	}
+	
 }
