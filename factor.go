@@ -3,6 +3,8 @@ package gobayes
 // Factor représente une table de probabilités multidimensionnelle
 // Multiply multiplie deux facteurs entre eux
 func (f *Factor) Multiply(other *Factor) *Factor {
+	if len(f.Values) == 0 { return other }
+    if len(other.Values) == 0 { return f }
 	newVars := union(f.Variables, other.Variables)
 	newDims := make(map[string]int)
 	size := 1
@@ -20,6 +22,8 @@ func (f *Factor) Multiply(other *Factor) *Factor {
 		Dims:      newDims,
 		Values:    make([]float64, size),
 	}
+
+	if size == 0 { return result }
 
 	resStrides := result.GetStrides()
 	fStrides := f.GetStrides()
@@ -117,61 +121,124 @@ func (f *Factor) StatesToIndex(states map[string]int, strides map[string]int) in
 	}
 	return index
 }
+func (f *Factor) Reduce(variable string, stateIndex int) *Factor {
+    // 1. Vérifier si la variable existe
+    exists := false
+    for _, v := range f.Variables {
+        if v == variable {
+            exists = true
+            break
+        }
+    }
+    if !exists {
+        return f
+    }
 
+    // 2. Calculer les nouvelles variables et la taille
+    newVars := []string{}
+    newDims := make(map[string]int)
+    size := 1
+    for _, v := range f.Variables {
+        if v != variable {
+            newVars = append(newVars, v)
+            newDims[v] = f.Dims[v]
+            size *= f.Dims[v]
+        }
+    }
+
+    // SÉCURITÉ : Si size est 0, c'est que le calcul a échoué. On force à 1 (scalaire).
+    if size <= 0 {
+        size = 1
+    }
+
+    result := &Factor{
+        Variables: newVars,
+        Dims:      newDims,
+        Values:    make([]float64, size),
+    }
+
+    fStrides := f.GetStrides()
+
+    // 3. Remplissage différencié (Cas Scalaire vs Normal)
+    if len(newVars) == 0 {
+        // Le facteur n'a plus de variables (ex: réduction de TempsReel)
+        tempStates := map[string]int{variable: stateIndex}
+        oldIdx := f.StatesToIndex(tempStates, fStrides)
+        
+        // Vérification de l'index avant affectation
+        if oldIdx < len(f.Values) {
+            result.Values[0] = f.Values[oldIdx]
+        }
+    } else {
+        // Le facteur a encore des variables (ex: réduction de la Stack)
+        resStrides := result.GetStrides()
+        for i := 0; i < size; i++ {
+            states := result.IndexToStates(i, resStrides)
+            states[variable] = stateIndex
+            
+            oldIdx := f.StatesToIndex(states, fStrides)
+            if oldIdx < len(f.Values) && i < len(result.Values) {
+                result.Values[i] = f.Values[oldIdx]
+            }
+        }
+    }
+
+    return result
+}
 // Reduce crée un nouveau facteur en fixant une variable à un index d'état spécifique.
 // C'est l'opération mathématique pour prendre en compte une "preuve".
-func (f *Factor) Reduce(variable string, stateIndex int) *Factor {
-	// 1. Vérifier si la variable existe dans ce facteur
-	exists := false
-	for _, v := range f.Variables {
-		if v == variable {
-			exists = true
-			break
-		}
-	}
+// func (f *Factor) Reduce(variable string, stateIndex int) *Factor {
+// 	// 1. Vérifier si la variable existe dans ce facteur
+// 	exists := false
+// 	for _, v := range f.Variables {
+// 		if v == variable {
+// 			exists = true
+// 			break
+// 		}
+// 	}
 
-	// Si la variable n'est pas dans ce facteur, on retourne le facteur tel quel
-	if !exists {
-		return f
-	}
+// 	// Si la variable n'est pas dans ce facteur, on retourne le facteur tel quel
+// 	if !exists {
+// 		return f
+// 	}
 
-	// 2. Définir les nouvelles variables (on retire la variable fixée)
-	newVars := []string{}
-	for _, v := range f.Variables {
-		if v != variable {
-			newVars = append(newVars, v)
-		}
-	}
+// 	// 2. Définir les nouvelles variables (on retire la variable fixée)
+// 	newVars := []string{}
+// 	for _, v := range f.Variables {
+// 		if v != variable {
+// 			newVars = append(newVars, v)
+// 		}
+// 	}
 
-	newDims := make(map[string]int)
-	size := 1
-	for _, v := range newVars {
-		newDims[v] = f.Dims[v]
-		size *= newDims[v]
-	}
-	if size == 0 { size = 1 }
+// 	newDims := make(map[string]int)
+// 	size := 1
+// 	for _, v := range newVars {
+// 		newDims[v] = f.Dims[v]
+// 		size *= newDims[v]
+// 	}
+// 	if size <= 0 { size = 1 }
 
-	result := &Factor{
-		Variables: newVars,
-		Dims:      newDims,
-		Values:    make([]float64, size),
-	}
+// 	result := &Factor{
+// 		Variables: newVars,
+// 		Dims:      newDims,
+// 		Values:    make([]float64, size),
+// 	}
 
-	resStrides := result.GetStrides()
-	fStrides := f.GetStrides()
+// 	resStrides := result.GetStrides()
+// 	fStrides := f.GetStrides()
 
-	// 3. Remplir le nouveau facteur uniquement avec les lignes valides
-	for i := 0; i < size; i++ {
-		states := result.IndexToStates(i, resStrides)
-		// On rajoute la variable fixée pour trouver l'index dans le facteur d'origine
-		states[variable] = stateIndex
+// 	// 3. Remplir le nouveau facteur uniquement avec les lignes valides
+// 	for i := 0; i < size; i++ {
+// 		states := result.IndexToStates(i, resStrides)
+// 		// On rajoute la variable fixée pour trouver l'index dans le facteur d'origine
+// 		states[variable] = stateIndex
 		
-		oldIdx := f.StatesToIndex(states, fStrides)
-		result.Values[i] = f.Values[oldIdx]
-	}
+// 		oldIdx := f.StatesToIndex(states, fStrides)
+// 		result.Values[i] = f.Values[oldIdx]
+// 	}
 
-	return result
-}
+// 	return result
+// }
 
 func (f *Factor) Normalize() {
 	sum := 0.0

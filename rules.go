@@ -1,10 +1,16 @@
 package gobayes
 
 // ScoreRule définit le poids d'un état selon une condition
+// type ScoreRule struct {
+//     TargetState string           `json:"target_state"`
+//     Conditions  map[string]string `json:"conditions"`
+//     Weight      float64          `json:"weight"`
+// }
 type ScoreRule struct {
-	TargetState string            // ex: "Go"
-	Conditions  map[string]string // ex: {"TempsReel": "Oui"}
-	Weight      float64           // ex: 10.0 (un poids élevé = probabilité haute)
+    TargetNode  string            `json:"target_node"`  // <-- Indispensable
+    TargetState string            `json:"target_state"`
+    Conditions  map[string]string `json:"conditions"`
+    Weight      float64           `json:"weight"`
 }
 
 // GenerateAutomatedCPD calcule la table de probabilités à partir de règles de scoring
