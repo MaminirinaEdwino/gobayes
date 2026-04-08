@@ -49,17 +49,15 @@ func (n *Node) getParentStatesForIndex(index int) map[string]string {
 // }
 
 func (n *Node) ruleMatches(rule ScoreRule, parentStates map[string]string) bool {
-    // Si la règle n'a pas de conditions, elle s'applique partout (poids par défaut)
-    if len(rule.Conditions) == 0 {
-        return false 
-    }
-
+    // On parcourt les conditions de la règle (ex: "TempsReel": "Oui")
     for varName, requiredState := range rule.Conditions {
-        val, ok := parentStates[varName]
-        // Si la condition porte sur une variable qui n'est pas un parent, on ignore
-        if !ok || val != requiredState {
+        actualState, ok := parentStates[varName]
+        
+        // Si le parent n'existe pas ou que l'état ne match pas (ex: "Non" != "Oui")
+        if !ok || actualState != requiredState {
             return false
         }
     }
+    // Si toutes les conditions sont remplies
     return true
 }

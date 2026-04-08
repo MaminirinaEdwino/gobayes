@@ -1,5 +1,7 @@
 package gobayes
 
+import "math"
+
 // Factor représente une table de probabilités multidimensionnelle
 // Multiply multiplie deux facteurs entre eux
 func (f *Factor) Multiply(other *Factor) *Factor {
@@ -240,12 +242,34 @@ func (f *Factor) Reduce(variable string, stateIndex int) *Factor {
 // 	return result
 // }
 
+// func (f *Factor) Normalize() {
+// 	sum := 0.0
+// 	for _, v := range f.Values {
+// 		sum += v
+// 	}
+// 	for i := range f.Values {
+// 		f.Values[i] /= sum
+// 	}
+// }
+
 func (f *Factor) Normalize() {
-	sum := 0.0
-	for _, v := range f.Values {
-		sum += v
-	}
-	for i := range f.Values {
-		f.Values[i] /= sum
-	}
+    sum := 0.0
+    for _, v := range f.Values {
+        sum += v
+    }
+
+    // SI LA SOMME EST ZÉRO OU NAN, ON RÉPARE
+    if sum == 0 || math.IsNaN(sum) {
+        if len(f.Values) > 0 {
+            uniform := 1.0 / float64(len(f.Values))
+            for i := range f.Values {
+                f.Values[i] = uniform
+            }
+        }
+        return
+    }
+
+    for i := range f.Values {
+        f.Values[i] /= sum
+    }
 }

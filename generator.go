@@ -1,5 +1,10 @@
 package gobayes
 
+import (
+	"fmt"
+	"log"
+)
+
 // Rule définit le poids d'une option selon un contexte
 type Rule struct {
 	TargetState  string
@@ -38,9 +43,13 @@ func (n *Node) GenerateCPD(rules []ScoreRule) {
 		// 		}
 		// 	}
 		// }
-
+		log.Printf("Génération CPD pour le nœud : %s", n.Name)
+		for _, rule := range rules {
+			log.Printf("Règle trouvée : vise %s, état %s", rule.TargetNode, rule.TargetState)
+		}
 		for _, rule := range rules {
 			// SÉCURITÉ : On n'applique la règle que si elle vise CE nœud précis
+			fmt.Println(n)
 			if rule.TargetNode != n.Name {
 				continue
 			}
@@ -62,6 +71,6 @@ func (n *Node) GenerateCPD(rules []ScoreRule) {
 			newCPD = append(newCPD, s/sum)
 		}
 	}
-
+	fmt.Println("new cpd", newCPD)
 	n.CPD = newCPD
 }
