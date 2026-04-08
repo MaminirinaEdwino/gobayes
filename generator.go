@@ -5,12 +5,6 @@ import (
 	"log"
 )
 
-// Rule définit le poids d'une option selon un contexte
-type Rule struct {
-	TargetState  string
-	ParentStates map[string]string
-	Weight       float64
-}
 
 func (n *Node) GenerateCPD(rules []ScoreRule) {
 	// 1. Calculer la taille totale de la table (Produit des états de tous les parents)
@@ -32,17 +26,6 @@ func (n *Node) GenerateCPD(rules []ScoreRule) {
 		for s := range rowScores {
 			rowScores[s] = 1.0
 		}
-
-		// 3. Appliquer les règles d'expertise
-		// for _, rule := range rules {
-		// 	// Si la règle s'applique à la combinaison actuelle des parents
-		// 	if n.ruleMatches(rule, parentStates) {
-		// 		stateIdx := n.getStateIndex(rule.TargetState)
-		// 		if stateIdx != -1 {
-		// 			rowScores[stateIdx] *= rule.Weight
-		// 		}
-		// 	}
-		// }
 		log.Printf("Génération CPD pour le nœud : %s", n.Name)
 		for _, rule := range rules {
 			log.Printf("Règle trouvée : vise %s, état %s", rule.TargetNode, rule.TargetState)
