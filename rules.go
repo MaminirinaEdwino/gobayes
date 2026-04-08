@@ -1,11 +1,5 @@
 package gobayes
 
-// ScoreRule définit le poids d'un état selon une condition
-// type ScoreRule struct {
-//     TargetState string           `json:"target_state"`
-//     Conditions  map[string]string `json:"conditions"`
-//     Weight      float64          `json:"weight"`
-// }
 type ScoreRule struct {
     TargetNode  string            `json:"target_node"`  // <-- Indispensable
     TargetState string            `json:"target_state"`
