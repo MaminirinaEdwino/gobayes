@@ -12,7 +12,6 @@ func union(a, b []string) []string {
 		}
 	}
 
-	// On ajoute les éléments de la deuxième liste s'ils n'existent pas encore
 	for _, item := range b {
 		if !m[item] {
 			m[item] = true
