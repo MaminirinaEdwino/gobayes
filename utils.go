@@ -10,13 +10,11 @@ func union(a, b []string) []string {
 			result = append(result, item)
 		}
 	}
-
 	for _, item := range b {
 		if !m[item] {
 			m[item] = true
 			result = append(result, item)
 		}
 	}
-
 	return result
 }
