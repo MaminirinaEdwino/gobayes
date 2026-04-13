@@ -16,7 +16,6 @@ func (n *Network) Query(target string, evidence map[string]int) *Factor {
 
     var result *Factor
     for _, f := range factors {
-        // On ignore les facteurs "morts" (ceux qui n'ont plus de variables et valent 0)
         if len(f.Variables) == 0 && (len(f.Values) == 0 || f.Values[0] == 0) {
             continue
         }

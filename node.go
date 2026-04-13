@@ -11,7 +11,6 @@ func (n *Node) getStateIndex(stateName string) int {
 func (n *Node) getParentStatesForIndex(index int) map[string]string {
     states := make(map[string]string)
     remainder := index
-    
     for i := len(n.Parents) - 1; i >= 0; i-- {
         p := n.Parents[i]
         stateIdx := remainder % len(p.States)

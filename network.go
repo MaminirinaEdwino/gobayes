@@ -22,7 +22,6 @@ func (n *Network) AddNode(name string, states []string) (*Node, error) {
 	return node, nil
 }
 
-// AddEdge crée un lien de causalité entre un parent et un enfant
 func (n *Network) AddEdge(parentName, childName string) error {
 	parent, okP := n.Nodes[parentName]
 	child, okC := n.Nodes[childName]
@@ -33,9 +32,7 @@ func (n *Network) AddEdge(parentName, childName string) error {
 	child.Parents = append(child.Parents, parent)
 	parent.Children = append(parent.Children, child)
 
-	// Vérification de cycle (Simple DFS)
 	if n.hasCycle() {
-		// On annule le lien si un cycle est détecté
 		child.Parents = child.Parents[:len(child.Parents)-1]
 		parent.Children = parent.Children[:len(parent.Children)-1]
 		return errors.New("cycle détecté : un réseau bayésien doit être acyclique")
@@ -43,8 +40,6 @@ func (n *Network) AddEdge(parentName, childName string) error {
 	return nil
 }
 
-// SetProbabilities permet de remplir la table CPD. 
-// Les probabilités doivent être fournies dans l'ordre des combinaisons d'états.
 func (node *Node) SetProbabilities(probs []float64) error {
 	expectedSize := len(node.States)
 	for _, p := range node.Parents {
@@ -59,7 +54,6 @@ func (node *Node) SetProbabilities(probs []float64) error {
 	return nil
 }
 
-// hasCycle vérifie si le graphe contient un cycle
 func (n *Network) hasCycle() bool {
 	visited := make(map[string]bool)
 	recStack := make(map[string]bool)
@@ -74,7 +68,7 @@ func (n *Network) hasCycle() bool {
 
 func (n *Network) isCyclic(name string, visited, recStack map[string]bool) bool {
 	if recStack[name] {
-		return true // Cycle détecté !
+		return true
 	}
 	if visited[name] {
 		return false
@@ -94,9 +88,7 @@ func (n *Network) isCyclic(name string, visited, recStack map[string]bool) bool 
 	return false
 }
 
-// ToFactor convertit les probabilités d'un nœud en un objet Factor calculable
 func (n *Node) ToFactor() *Factor {
-	// 1. Collecter les variables impliquées : le nœud lui-même + ses parents
 	vars := []string{n.Name}
 	dims := make(map[string]int)
 	dims[n.Name] = len(n.States)
@@ -106,8 +98,6 @@ func (n *Node) ToFactor() *Factor {
 		dims[p.Name] = len(p.States)
 	}
 
-	// 2. Créer le facteur avec une copie des probabilités (CPD)
-	// On copie pour éviter de modifier accidentellement les données d'origine
 	cpdCopy := make([]float64, len(n.CPD))
 	copy(cpdCopy, n.CPD)
 
