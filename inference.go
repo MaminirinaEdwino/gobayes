@@ -2,8 +2,6 @@ package gobayes
 
 import "fmt"
 
-// Query calcule la distribution de probabilité d'une variable cible,
-// compte tenu des preuves fournies (evidence).
 func (n *Network) Query(target string, evidence map[string]int) *Factor {
 	factors := []*Factor{}
     for _, node := range n.Nodes {
@@ -16,7 +14,6 @@ func (n *Network) Query(target string, evidence map[string]int) *Factor {
         factors = append(factors, f)
     }
 
-    // 3. Multiplication Sécurisée
     var result *Factor
     for _, f := range factors {
         // On ignore les facteurs "morts" (ceux qui n'ont plus de variables et valent 0)
@@ -32,20 +29,16 @@ func (n *Network) Query(target string, evidence map[string]int) *Factor {
 		fmt.Println("Multiply", result)
     }
 
-    // Si après tout ça result est nil, on crée un facteur uniforme pour éviter le crash
     if result == nil {
         return n.Nodes[target].ToFactor()
     }
 
-	// 4. Marginaliser toutes les variables sauf la cible
 	for _, v := range result.Variables {
 		if v != target {
 			result = result.Marginalize(v)
 		}
 	}
 
-	// 5. Normaliser le résultat (la somme doit valoir 1)
 	result.Normalize()
-
 	return result
 }

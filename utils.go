@@ -1,6 +1,5 @@
 package gobayes
 
-// union combine deux listes de chaînes de caractères en gardant l'ordre d'apparition
 func union(a, b []string) []string {
 	m := make(map[string]bool)
 	var result []string
